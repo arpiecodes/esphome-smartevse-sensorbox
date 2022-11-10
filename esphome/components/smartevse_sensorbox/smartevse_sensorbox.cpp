@@ -8,6 +8,7 @@ namespace smartevse_sensorbox {
 
     void SmartEVSESensorbox::add_p1_value_sensor(int type, esphome::sensor::Sensor* &sensor) {
         P1Sensors[type] = sensor;
+        P1SensorSet[type] = true;
     }
 
     void SmartEVSESensorbox::use_ct_readings(bool useCTs) {
@@ -28,14 +29,17 @@ namespace smartevse_sensorbox {
       DSMRVersionSensor = sensor;
       sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
         P1LastUpdate = time(NULL);
+        GreenLEDBlink = 0;
         digitalWrite(PIN_LED_GREEN, LOW);
-        GreenLEDBlink = 1;
       });
     }
 
     uint16_t SmartEVSESensorbox::modbus_input_on_read(uint16_t reg, uint16_t val) {
       unsigned char dataready = 0;
       unsigned char DSMRver = 0;
+
+      float value;
+      float produceValue;
 
       switch (reg) {
         case 0:
@@ -61,32 +65,71 @@ namespace smartevse_sensorbox {
         case 2:
         case 3:
           // Volts L1 (32 bit floating point), Smartmeter P1 data
-          return float_to_modbus(id(P1Sensors[3]).state, reg);
+          if (P1SensorSet[3]) {
+            value = id(P1Sensors[3]).state;
+          } else {
+            value = 0;
+          }
+          return float_to_modbus(value, reg);
           break;
         case 4:
         case 5:
           // Volts L2 (32 bit floating point), Smartmeter P1 data
-          return float_to_modbus(id(P1Sensors[4]).state, reg);
+          if (P1SensorSet[4]) {
+            value = id(P1Sensors[4]).state;
+          } else {
+            value = 0;
+          }
+          return float_to_modbus(value, reg);
           break;
         case 6:
         case 7:
           // Volts L3 (32 bit floating point), Smartmeter P1 data
-          return float_to_modbus(id(P1Sensors[5]).state, reg);
+          if (P1SensorSet[5]) {
+            value = id(P1Sensors[5]).state;
+          } else {
+            value = 0;
+          }
+          return float_to_modbus(value, reg);
           break;
         case 8:
         case 9:
           // Current L1 (32 bit floating point), Smartmeter P1 data
-          return float_to_modbus(id(P1Sensors[0]).state, reg);
+          value = id(P1Sensors[0]).state;
+          if (P1SensorSet[6]) {
+            produceValue = id(P1Sensors[6]).state;
+            if (value > 0 && produceValue > 0) {
+              // If produced power is > 0 then make value negative
+              value = -value;
+            }
+          }
+          return float_to_modbus(value, reg);
           break;
         case 10:
         case 11:
           // Current L2 (32 bit floating point), Smartmeter P1 data
-          return float_to_modbus(id(P1Sensors[1]).state, reg);
+          value = id(P1Sensors[1]).state;
+          if (P1SensorSet[7]) {
+            produceValue = id(P1Sensors[7]).state;
+            if (value > 0 && produceValue > 0) {
+              // If produced power is > 0 then make value negative
+              value = -value;
+            }
+          }
+          return float_to_modbus(value, reg);
           break;
         case 12:
         case 13:
           // Current L3 (32 bit floating point), Smartmeter P1 data
-          return float_to_modbus(id(P1Sensors[2]).state, reg);
+          value = id(P1Sensors[2]).state;
+          if (P1SensorSet[8]) {
+            produceValue = id(P1Sensors[8]).state;
+            if (value > 0 && produceValue > 0) {
+              // If produced power is > 0 then make value negative
+              value = -value;
+            }
+          }
+          return float_to_modbus(value, reg);
           break;
         case 14:
         case 15:
@@ -105,8 +148,8 @@ namespace smartevse_sensorbox {
           break;
       }
 
-      // By default we return zero
-      return float_to_modbus(0, reg);
+      // By default we return a zero
+      return 0;
     }
 
     void SmartEVSESensorbox::setup() {
@@ -139,13 +182,7 @@ namespace smartevse_sensorbox {
 
     void SmartEVSESensorbox::loop() {
         this->ct_read_values();
-
-        if (GreenLEDBlink) {
-            GreenLEDBlink = 0;
-            digitalWrite(PIN_LED_GREEN, HIGH);
-        }
-
-        delay(500);
+        digitalWrite(PIN_LED_GREEN, HIGH);
     }
 
     void SmartEVSESensorbox::ct_read_values() {

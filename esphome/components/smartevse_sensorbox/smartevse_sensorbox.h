@@ -15,10 +15,6 @@
 
 #define CAL 151                                                                 // CT calibration value (normal mode)
 #define CALRMS 0.3                                                              // CT calibration value (RMS mode)
-#define CW 0                                                                    // Rotation Right (CW)
-#define CCW 1                                                                   // Rotation Left (CCW)
-#define WIRES4 0                                                                //
-#define WIRES3 2                                                                //
 
 #define PIN_PGD 23		// PIC connection to PGD, serial measurements input
 #define PIN_PGC 22		// PIC connection to PGC, sets PIC wire mode (output)
@@ -74,7 +70,8 @@ namespace esphome {
           unsigned char IrmsMode = 0, UseCTs = 0, Wire = 0, CTWire = 0, CTRotation = 0;
           float IrmsCT[3];
 
-          esphome::sensor::Sensor* P1Sensors[6];
+          bool P1SensorSet[10];
+          esphome::sensor::Sensor* P1Sensors[10];
           esphome::text_sensor::TextSensor* DSMRVersionSensor;
 
           esphome::sensor::Sensor* ct1_current_ = new esphome::sensor::Sensor();
