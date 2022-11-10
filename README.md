@@ -1,6 +1,6 @@
 # esphome-smartevse-sensorbox
 
-This ESPHome component code provides the basic functionality of SmartEVSE Sensorbox 2.
+This ESPHome component code provides the basic functionality of SmartEVSE Sensorbox 2 (https://github.com/SmartEVSE/Sensorbox-2) within ESPHome.
 
 - Sends current and voltage information to SmartEVSE master through modbus
 - Both P1 and CT readings are supported through simple configuration
