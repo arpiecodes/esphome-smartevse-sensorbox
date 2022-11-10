@@ -11,7 +11,9 @@ This ESPHome component code provides the basic functionality of SmartEVSE Sensor
 
 Basically if you already use Home Assistant and ESPHome, it can easily be flashed and used as a drop-in replacement for the original Sensorbox firmware without losing its core functionality of feeding P1/CT power data to SmartEVSE without having to rely on WiFi, network or (for example) Home Assistant.
 
-Below YAML can simply be copied and paste'd in your ESPHome project and ESPHome will then automatically fetch the latest versions of the code and compile everything for you. No need to copy and paste any custom files.
+Below YAML can simply be copied and paste'd in your ESPHome project and ESPHome will then automatically fetch the latest versions of the code and compile everything for you. No need to copy and paste any custom files. Please note that it is only meant to be uploaded onto Sensorbox 2 hardware. No out of the box support for other configurations (even though you could in theory make this work).
+
+*NOTE: The PIC on your Sensorbox should be programmed to only provide CT measurements, else it may interfere with modbus communication. Please first install the original ESP32 Sensorbox 2 firmware and reboot the device once (so the PIC can be reprogrammed) before using the ESPHome component.*
 
 ```yaml
 esphome:
@@ -19,17 +21,13 @@ esphome:
   platformio_options:
     board_build.f_cpu: 240000000L
 
-time:
-  - platform: homeassistant
-    id: homeassistant_time
-
 external_components:
   - source: github://synegic/esphome-modbus-server@master
-    refresh: 30s
+    refresh: 60s
     components:
       - modbus_server
   - source: github://synegic/esphome-smartevse-sensorbox@main
-    refresh: 30s
+    refresh: 60s
     components:
       - smartevse_sensorbox
 
@@ -100,9 +98,11 @@ modbus_server:
 smartevse_sensorbox:
   id: sensorbox
   uart_id: uart_pic
-  use_ct_readings: false
-  p1_sensors:
-    # IDs of sensors to use for P1/DSMR data (see dsmr: section below) 
+  use_ct_readings: false # whether to send CT values to SmartEVSE as EnergyMeter readings
+  ct_rotation: CW # CT field rotation (CW: clockwise, CCW: counter-clockwise)
+  ct_wires: 4WIRE # CT wire configuration (3WIRE or 4WIRE)
+  p1_sensors: # optional if use_ct_readings is true
+    # IDs of sensors to use for P1 measurements (see dsmr section below) 
     dsmr_version: dsmr_version
     current_phase_1: current_phase_1
     current_phase_2: current_phase_2
@@ -111,6 +111,8 @@ smartevse_sensorbox:
     voltage_phase_2: voltage_phase_2
     voltage_phase_3: voltage_phase_2
 
+# DSMR component config
+# see https://esphome.io/components/sensor/dsmr.html
 dsmr:
   uart_id: uart_p1
   max_telegram_length: 1700
@@ -188,7 +190,7 @@ sensor:
   - platform: wifi_signal
     name: "Sensorbox Wi-Fi Signal"
     update_interval: 60s
-  - platform: custom
+  - platform: custom # adds in CT clamp readings as sensors as well
     lambda: |-
       return { id(sensorbox)->ct1_current_, id(sensorbox)->ct2_current_, id(sensorbox)->ct3_current_};
     # Sensor names for PIC connected current clamps in HA, you can change these if you want
