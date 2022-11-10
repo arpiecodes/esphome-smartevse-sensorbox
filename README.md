@@ -11,7 +11,7 @@ This ESPHome component code provides the basic functionality of SmartEVSE Sensor
 
 Basically if you already use Home Assistant and ESPHome, it can easily be flashed and used as a drop-in replacement for the original Sensorbox firmware without losing its core functionality of feeding P1/CT power data to SmartEVSE without having to rely on WiFi, network or (for example) Home Assistant.
 
-Example of a complete working configuration:
+Below YAML can simply be copied and paste'd in your ESPHome project and ESPHome will then automatically fetch the latest versions of the code and compile everything for you. No need to copy and paste any custom files.
 
 ```yaml
 esphome:
@@ -218,8 +218,6 @@ text_sensor:
     name: "ESPHome Version"
     hide_timestamp: true
 ```
-
-Above YAML can simply be copied and paste'd in ESPHome. ESPHome will automatically fetch the latest versions of the code in this repository and compile all dependencies. No need to copy and paste any custom files.
 
 ```
 MIT License
