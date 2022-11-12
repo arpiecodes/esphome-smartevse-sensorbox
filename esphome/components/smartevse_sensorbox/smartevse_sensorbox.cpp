@@ -30,7 +30,6 @@ namespace smartevse_sensorbox {
       sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
         P1LastUpdate = time(NULL);
         GreenLEDBlink = 0;
-        digitalWrite(PIN_LED_GREEN, LOW);
       });
     }
 
@@ -182,7 +181,6 @@ namespace smartevse_sensorbox {
 
     void SmartEVSESensorbox::loop() {
         this->ct_read_values();
-        digitalWrite(PIN_LED_GREEN, HIGH);
     }
 
     void SmartEVSESensorbox::ct_read_values() {
