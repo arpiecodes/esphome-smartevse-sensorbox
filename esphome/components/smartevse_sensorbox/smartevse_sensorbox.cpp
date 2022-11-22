@@ -99,7 +99,7 @@ namespace smartevse_sensorbox {
             produceValue = id(P1Sensors[6]).state;
             if (value > 0 && produceValue > 0) {
               // If produced power is > 0 then make value negative
-              value = -value;
+              // value = -value;
             }
           }
           return float_to_modbus(value, reg);
@@ -112,7 +112,7 @@ namespace smartevse_sensorbox {
             produceValue = id(P1Sensors[7]).state;
             if (value > 0 && produceValue > 0) {
               // If produced power is > 0 then make value negative
-              value = -value;
+              // value = -value;
             }
           }
           return float_to_modbus(value, reg);
@@ -125,7 +125,7 @@ namespace smartevse_sensorbox {
             produceValue = id(P1Sensors[8]).state;
             if (value > 0 && produceValue > 0) {
               // If produced power is > 0 then make value negative
-              value = -value;
+              // value = -value;
             }
           }
           return float_to_modbus(value, reg);
