@@ -295,7 +295,7 @@ namespace smartevse_sensorbox {
 
     bool SmartEVSESensorbox::is_p1_ready() {
         uint16_t now = time(NULL);
-        if ((now - P1LastUpdate) < 5) {
+        if ((now - P1LastUpdate) < 10) {
             digitalWrite(PIN_LED_RED, HIGH);
             return true;
         } else {
@@ -306,7 +306,7 @@ namespace smartevse_sensorbox {
 
     bool SmartEVSESensorbox::is_ct_ready() {
       uint16_t now = time(NULL);
-      return (now - CTLastUpdate) < 5;
+      return (now - CTLastUpdate) < 10;
     }
 
     // Poly used is x^16+x^15+x^2+x
