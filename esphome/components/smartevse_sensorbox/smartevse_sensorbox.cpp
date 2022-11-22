@@ -95,39 +95,18 @@ namespace smartevse_sensorbox {
         case 9:
           // Current L1 (32 bit floating point), Smartmeter P1 data
           value = id(P1Sensors[0]).state;
-          if (P1SensorSet[6]) {
-            produceValue = id(P1Sensors[6]).state;
-            if (value > 0 && produceValue > 0) {
-              // If produced power is > 0 then make value negative
-              value = -value;
-            }
-          }
           return float_to_modbus(value, reg);
           break;
         case 10:
         case 11:
           // Current L2 (32 bit floating point), Smartmeter P1 data
           value = id(P1Sensors[1]).state;
-          if (P1SensorSet[7]) {
-            produceValue = id(P1Sensors[7]).state;
-            if (value > 0 && produceValue > 0) {
-              // If produced power is > 0 then make value negative
-              value = -value;
-            }
-          }
           return float_to_modbus(value, reg);
           break;
         case 12:
         case 13:
           // Current L3 (32 bit floating point), Smartmeter P1 data
           value = id(P1Sensors[2]).state;
-          if (P1SensorSet[8]) {
-            produceValue = id(P1Sensors[8]).state;
-            if (value > 0 && produceValue > 0) {
-              // If produced power is > 0 then make value negative
-              value = -value;
-            }
-          }
           return float_to_modbus(value, reg);
           break;
         case 14:
