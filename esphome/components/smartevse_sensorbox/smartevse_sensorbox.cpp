@@ -159,7 +159,9 @@ namespace smartevse_sensorbox {
     }
 
     void SmartEVSESensorbox::loop() {
-        this->ct_read_values();
+        if (available()) {
+          this->ct_read_values();
+        }
     }
 
     void SmartEVSESensorbox::ct_read_values() {
