@@ -51,7 +51,7 @@ namespace smartevse_sensorbox {
             dataready |= 0x03;
           }
           if (is_p1_ready()) {
-            DSMRver = atoi(id(DSMRVersionSensor).state.c_str());
+            DSMRver = atoi(DSMRVersionSensor->state.c_str());
             if (DSMRver == 50) {
               dataready |= 0x80;
             } else {
