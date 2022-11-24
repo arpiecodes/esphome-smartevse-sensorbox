@@ -81,7 +81,7 @@ namespace esphome {
           uint16_t P1LastUpdate = 0;
           uint16_t CTLastUpdate = 0;
 
-          void ct_read_values();
+          void ct_read_values(void * parameters);
 
           bool is_ct_ready();
           bool is_p1_ready();
