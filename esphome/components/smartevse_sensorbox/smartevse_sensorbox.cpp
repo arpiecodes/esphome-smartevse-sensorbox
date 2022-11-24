@@ -25,9 +25,9 @@ namespace smartevse_sensorbox {
         Wire = CTWire + CTRotation;
     }
 
-    void SmartEVSESensorbox::set_p1_version_sensor(esphome::text_sensor::TextSensor* sensor) {
+    void SmartEVSESensorbox::set_p1_version_sensor(esphome::text_sensor::TextSensor* &sensor) {
       DSMRVersionSensor = sensor;
-      DSMRVersionSensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
+      sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
         P1LastUpdate = time(NULL);
       });
     }
@@ -176,11 +176,6 @@ namespace smartevse_sensorbox {
         ct3_current_->set_icon("mdi:current-ac");
         ct3_current_->set_unit_of_measurement("A");
         ct3_current_->set_accuracy_decimals(2);
-
-        DSMRVersionSensor = sensor;
-        sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
-          P1LastUpdate = time(NULL);
-        });
     }
 
     void SmartEVSESensorbox::loop() {
