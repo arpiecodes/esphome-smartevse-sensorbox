@@ -177,15 +177,10 @@ namespace smartevse_sensorbox {
         ct3_current_->set_unit_of_measurement("A");
         ct3_current_->set_accuracy_decimals(2);
 
-        // set-up CT measurement task separately (as ESPHome runs in a single task)
-        xTaskCreate(
-            ct_read_values, // Function that should be called
-            "CTReadValues",      // Name of the task (for debugging)
-            4096,           // Stack size (bytes)
-            NULL,           // Parameter to pass
-            1,              // Task priority (low)
-            NULL            // Task handle
-        );
+        DSMRVersionSensor = sensor;
+        sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
+          P1LastUpdate = time(NULL);
+        });
     }
 
     void SmartEVSESensorbox::loop() {
@@ -195,144 +190,141 @@ namespace smartevse_sensorbox {
             digitalWrite(PIN_LED_RED, LOW);
             NoP1Data = 1;
         }
+
+        ct_read_values();
     }
 
-    void SmartEVSESensorbox::ct_read_values(void * parameters) {
-      while(1)  // infinite loop
-      {
-        int Samples = 0;
-        unsigned char x, CTwire = 0;
-        static unsigned char CTstring[100], CTeot = 0;
-        static unsigned char CTlength = 0, CTptr = 0;
-        uint16_t crccal, crcdata;
+    void SmartEVSESensorbox::ct_read_values() {
+      int Samples = 0;
+      unsigned char x, CTwire = 0;
+      static unsigned char CTstring[100], CTeot = 0;
+      static unsigned char CTlength = 0, CTptr = 0;
+      uint16_t crccal, crcdata;
 
-        int Power1A = 0, Power1B = 0, Power2A = 0, Power2B = 0, Power3A = 0, Power3B = 0;
-        const float y1 = -3.114637, x1 = 4.043093, y2 = -3.057741, x2 = 3.988535, y3 = -3.000724,
-                    x3 = 3.933821;  // 60 samples 19.00 Ilead
+      int Power1A = 0, Power1B = 0, Power2A = 0, Power2B = 0, Power3A = 0, Power3B = 0;
+      const float y1 = -3.114637, x1 = 4.043093, y2 = -3.057741, x2 = 3.988535, y3 = -3.000724,
+                  x3 = 3.933821;  // 60 samples 19.00 Ilead
 
-        while (available()) {
-          char *ret, ch;
-          ch = read();
+      while (available()) {
+        char *ret, ch;
+        ch = read();
 
-          if (ch == '/') {  // Start character
-            CTptr = 0;
-            CTeot = 0;  // start from beginning of buffer
-          }
-
-          if (CTeot) {  // end of transmission?
-            if (CTeot > 4)
-              ch = 0;  // we have also received the CRC, null terminate
-            CTeot++;
-          }
-
-          CTstring[CTptr] = ch;  // Store in buffer
-          if (CTptr < 90)
-            CTptr++;  // prevent overflow of buffer
-
-          if (ch == '!' && CTstring[0] == '/') {
-            CTlength = CTptr;  // store pointer of start of CRC
-            CTeot = 1;
-          }
-
-          if (CTeot > 5) {
-            crcdata =
-                (uint16_t) strtol((const char *) CTstring + CTlength, NULL, 16);  // get crc from data, convert to int
-            crccal = SmartEVSESensorbox::CRC16(0, CTstring, CTlength);            // calculate CRC16 from data
-
-            ESP_LOGD("pic", "length: %u, CRC16: %04x : %04x string: %s", CTlength, crccal, crcdata, CTstring);
-
-            if (crcdata == crccal) {
-              ret = strstr((const char *) CTstring, (const char *) "1A:");  // Extract CT measurements from the buffer.
-              if (ret != NULL)
-                Power1A = atoi((const char *) ret + 3);
-              ret = strstr((const char *) CTstring, (const char *) "1B:");
-              if (ret != NULL)
-                Power1B = atoi((const char *) ret + 3);
-              ret = strstr((const char *) CTstring, (const char *) "2A:");
-              if (ret != NULL)
-                Power2A = atoi((const char *) ret + 3);
-              ret = strstr((const char *) CTstring, (const char *) "2B:");
-              if (ret != NULL)
-                Power2B = atoi((const char *) ret + 3);
-              ret = strstr((const char *) CTstring, (const char *) "3A:");
-              if (ret != NULL)
-                Power3A = atoi((const char *) ret + 3);
-              ret = strstr((const char *) CTstring, (const char *) "3B:");
-              if (ret != NULL)
-                Power3B = atoi((const char *) ret + 3);
-              ret = strstr((const char *) CTstring, (const char *) "SA:");
-              if (ret != NULL)
-                Samples = atoi((const char *) ret + 3);
-              // as we divide by Samples, it can not be 0!
-              if (Samples < 1)
-                Samples = 1;
-
-              ret = strstr((const char *) CTstring, (const char *) "WI:");  // CT wire setting 4Wire=0, 3Wire=1 (bit1)
-              if (ret != NULL)
-                CTwire = atoi((const char *) ret + 3);  // and phase rotation CW=0, CCW=1 (bit0)
-
-              // Irms data when there is no mains plug connected.
-              // There is no way of knowing the direction of the current.
-              ret = strstr((const char *) CTstring, (const char *) "1R:");
-              if (ret != NULL)
-                Power1A = atoi((const char *) ret + 3);
-              ret = strstr((const char *) CTstring, (const char *) "2R:");
-              if (ret != NULL)
-                Power2A = atoi((const char *) ret + 3);
-              ret = strstr((const char *) CTstring, (const char *) "3R:");
-              if (ret != NULL) {
-                Power3A = atoi((const char *) ret + 3);
-
-                IrmsCT[0] = sqrt((float) Power1A / Samples) * CALRMS;
-                IrmsCT[1] = sqrt((float) Power2A / Samples) * CALRMS;
-                IrmsCT[2] = sqrt((float) Power3A / Samples) * CALRMS;
-
-                // CT Measurement with no current direction information
-                IrmsMode = 1;
-
-              } else {
-                // We do have enough data to calculate the Irms and direction of current for each phase
-                IrmsCT[0] = (x1 * ((float) Power1A / Samples) + y1 * ((float) Power1B / Samples)) / CAL;
-                IrmsCT[1] = (x2 * ((float) Power2A / Samples) + y2 * ((float) Power2B / Samples)) / CAL;
-                IrmsCT[2] = (x3 * ((float) Power3A / Samples) + y3 * ((float) Power3B / Samples)) / CAL;
-
-                IrmsMode = 0;
-              }
-
-              // very small values will be displayed as 0.0A
-              for (x = 0; x < 3; x++) {
-                if ((IrmsCT[x] > -0.05) && (IrmsCT[x] < 0.05))
-                  IrmsCT[x] = 0.0;
-              }
-
-              // if selected Wire setting (3-Wire or 4-Wire) and CW and CCW phase rotation are not correctly set, we can toggle the PGC pin to set it.
-              if ((CTwire != Wire) && IrmsMode == 0) {
-                x = (4 + Wire - CTwire) % 4;
-                ESP_LOGD("pic", "Wire:%u CTwire:%u pulses %u\n", Wire, CTwire, x);
-                do {
-                  digitalWrite(PIN_PGC, HIGH);
-                  digitalWrite(PIN_PGC, LOW);
-                  vTaskDelay(1 / portTICK_PERIOD_MS);
-                } while (--x);
-              }
-
-              ct1_current_->publish_state(IrmsCT[0]);
-              ct2_current_->publish_state(IrmsCT[1]);
-              ct3_current_->publish_state(IrmsCT[2]);
-
-              CTLastUpdate = time(NULL);
-
-            } else {
-              ESP_LOGW("pic", "CRC error in CTdata\n");
-            }
-
-            CTeot = 0;
-            CTptr = 0;
-            memset(CTstring, 0u, 100u);
-          }
+        if (ch == '/') {  // Start character
+          CTptr = 0;
+          CTeot = 0;  // start from beginning of buffer
         }
 
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        if (CTeot) {  // end of transmission?
+          if (CTeot > 4)
+            ch = 0;  // we have also received the CRC, null terminate
+          CTeot++;
+        }
+
+        CTstring[CTptr] = ch;  // Store in buffer
+        if (CTptr < 90)
+          CTptr++;  // prevent overflow of buffer
+
+        if (ch == '!' && CTstring[0] == '/') {
+          CTlength = CTptr;  // store pointer of start of CRC
+          CTeot = 1;
+        }
+
+        if (CTeot > 5) {
+          crcdata =
+              (uint16_t) strtol((const char *) CTstring + CTlength, NULL, 16);  // get crc from data, convert to int
+          crccal = SmartEVSESensorbox::CRC16(0, CTstring, CTlength);            // calculate CRC16 from data
+
+          ESP_LOGD("pic", "length: %u, CRC16: %04x : %04x string: %s", CTlength, crccal, crcdata, CTstring);
+
+          if (crcdata == crccal) {
+            ret = strstr((const char *) CTstring, (const char *) "1A:");  // Extract CT measurements from the buffer.
+            if (ret != NULL)
+              Power1A = atoi((const char *) ret + 3);
+            ret = strstr((const char *) CTstring, (const char *) "1B:");
+            if (ret != NULL)
+              Power1B = atoi((const char *) ret + 3);
+            ret = strstr((const char *) CTstring, (const char *) "2A:");
+            if (ret != NULL)
+              Power2A = atoi((const char *) ret + 3);
+            ret = strstr((const char *) CTstring, (const char *) "2B:");
+            if (ret != NULL)
+              Power2B = atoi((const char *) ret + 3);
+            ret = strstr((const char *) CTstring, (const char *) "3A:");
+            if (ret != NULL)
+              Power3A = atoi((const char *) ret + 3);
+            ret = strstr((const char *) CTstring, (const char *) "3B:");
+            if (ret != NULL)
+              Power3B = atoi((const char *) ret + 3);
+            ret = strstr((const char *) CTstring, (const char *) "SA:");
+            if (ret != NULL)
+              Samples = atoi((const char *) ret + 3);
+            // as we divide by Samples, it can not be 0!
+            if (Samples < 1)
+              Samples = 1;
+
+            ret = strstr((const char *) CTstring, (const char *) "WI:");  // CT wire setting 4Wire=0, 3Wire=1 (bit1)
+            if (ret != NULL)
+              CTwire = atoi((const char *) ret + 3);  // and phase rotation CW=0, CCW=1 (bit0)
+
+            // Irms data when there is no mains plug connected.
+            // There is no way of knowing the direction of the current.
+            ret = strstr((const char *) CTstring, (const char *) "1R:");
+            if (ret != NULL)
+              Power1A = atoi((const char *) ret + 3);
+            ret = strstr((const char *) CTstring, (const char *) "2R:");
+            if (ret != NULL)
+              Power2A = atoi((const char *) ret + 3);
+            ret = strstr((const char *) CTstring, (const char *) "3R:");
+            if (ret != NULL) {
+              Power3A = atoi((const char *) ret + 3);
+
+              IrmsCT[0] = sqrt((float) Power1A / Samples) * CALRMS;
+              IrmsCT[1] = sqrt((float) Power2A / Samples) * CALRMS;
+              IrmsCT[2] = sqrt((float) Power3A / Samples) * CALRMS;
+
+              // CT Measurement with no current direction information
+              IrmsMode = 1;
+
+            } else {
+              // We do have enough data to calculate the Irms and direction of current for each phase
+              IrmsCT[0] = (x1 * ((float) Power1A / Samples) + y1 * ((float) Power1B / Samples)) / CAL;
+              IrmsCT[1] = (x2 * ((float) Power2A / Samples) + y2 * ((float) Power2B / Samples)) / CAL;
+              IrmsCT[2] = (x3 * ((float) Power3A / Samples) + y3 * ((float) Power3B / Samples)) / CAL;
+
+              IrmsMode = 0;
+            }
+
+            // very small values will be displayed as 0.0A
+            for (x = 0; x < 3; x++) {
+              if ((IrmsCT[x] > -0.05) && (IrmsCT[x] < 0.05))
+                IrmsCT[x] = 0.0;
+            }
+
+            // if selected Wire setting (3-Wire or 4-Wire) and CW and CCW phase rotation are not correctly set, we can toggle the PGC pin to set it.
+            if ((CTwire != Wire) && IrmsMode == 0) {
+              x = (4 + Wire - CTwire) % 4;
+              ESP_LOGD("pic", "Wire:%u CTwire:%u pulses %u\n", Wire, CTwire, x);
+              do {
+                digitalWrite(PIN_PGC, HIGH);
+                digitalWrite(PIN_PGC, LOW);
+                vTaskDelay(1 / portTICK_PERIOD_MS);
+              } while (--x);
+            }
+
+            ct1_current_->publish_state(IrmsCT[0]);
+            ct2_current_->publish_state(IrmsCT[1]);
+            ct3_current_->publish_state(IrmsCT[2]);
+
+            CTLastUpdate = time(NULL);
+
+          } else {
+            ESP_LOGW("pic", "CRC error in CTdata\n");
+          }
+
+          CTeot = 0;
+          CTptr = 0;
+          memset(CTstring, 0u, 100u);
+        }
       }
     }
 
