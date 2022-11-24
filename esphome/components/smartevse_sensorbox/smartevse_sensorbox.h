@@ -67,7 +67,7 @@ namespace esphome {
           void loop() override;
 
          private:
-          unsigned char IrmsMode = 0, UseCTs = 0, Wire = 0, CTWire = 0, CTRotation = 0;
+          unsigned char IrmsMode = 0, UseCTs = 0, Wire = 0, CTWire = 0, CTRotation = 0, NoP1Data = 0;
           float IrmsCT[3];
 
           bool P1SensorSet[10];
@@ -78,7 +78,6 @@ namespace esphome {
           esphome::sensor::Sensor* ct2_current_ = new esphome::sensor::Sensor();
           esphome::sensor::Sensor* ct3_current_ = new esphome::sensor::Sensor();
 
-          uint8_t GreenLEDBlink = 0;
           uint16_t P1LastUpdate = 0;
           uint16_t CTLastUpdate = 0;
 

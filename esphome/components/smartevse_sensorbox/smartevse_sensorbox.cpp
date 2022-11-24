@@ -29,7 +29,6 @@ namespace smartevse_sensorbox {
       DSMRVersionSensor = sensor;
       sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
         P1LastUpdate = time(NULL);
-        GreenLEDBlink = 0;
       });
     }
 
@@ -37,7 +36,7 @@ namespace smartevse_sensorbox {
       unsigned char dataready = 0;
       unsigned char DSMRver = 0;
 
-      float value;
+      float value = 0;
       float produceValue;
 
       switch (reg) {
@@ -66,8 +65,6 @@ namespace smartevse_sensorbox {
           // Volts L1 (32 bit floating point), Smartmeter P1 data
           if (P1SensorSet[3]) {
             value = id(P1Sensors[3]).state;
-          } else {
-            value = 0;
           }
           return float_to_modbus(value, reg);
           break;
@@ -76,8 +73,6 @@ namespace smartevse_sensorbox {
           // Volts L2 (32 bit floating point), Smartmeter P1 data
           if (P1SensorSet[4]) {
             value = id(P1Sensors[4]).state;
-          } else {
-            value = 0;
           }
           return float_to_modbus(value, reg);
           break;
@@ -86,27 +81,52 @@ namespace smartevse_sensorbox {
           // Volts L3 (32 bit floating point), Smartmeter P1 data
           if (P1SensorSet[5]) {
             value = id(P1Sensors[5]).state;
-          } else {
-            value = 0;
           }
           return float_to_modbus(value, reg);
           break;
         case 8:
         case 9:
           // Current L1 (32 bit floating point), Smartmeter P1 data
-          value = id(P1Sensors[0]).state;
+          if (P1SensorSet[1] && P1SensorSet[3]) {
+            if (P1Sensors[3].state > 0) {
+              value = P1Sensors[1].state / P1Sensors[3].state;
+              if (value == 0) {
+                if (P1SensorSet[6] && P1Sensors[6].state > 0) {
+                  value = -(P1Sensors[6].state / P1Sensors[3].state);
+                }
+              }
+            }
+          }
           return float_to_modbus(value, reg);
           break;
         case 10:
         case 11:
           // Current L2 (32 bit floating point), Smartmeter P1 data
-          value = id(P1Sensors[1]).state;
+          if (P1SensorSet[2] && P1SensorSet[4]) {
+            if (P1Sensors[4].state > 0) {
+              value = P1Sensors[2].state / P1Sensors[4].state;
+              if (value == 0) {
+                if (P1SensorSet[7] && P1Sensors[7].state > 0) {
+                  value = -(P1Sensors[7].state / P1Sensors[4].state);
+                }
+              }
+            }
+          }
           return float_to_modbus(value, reg);
           break;
         case 12:
         case 13:
           // Current L3 (32 bit floating point), Smartmeter P1 data
-          value = id(P1Sensors[2]).state;
+          if (P1SensorSet[3] && P1SensorSet[5]) {
+            if (P1Sensors[5].state > 0) {
+              value = P1Sensors[3].state / P1Sensors[5].state;
+              if (value == 0) {
+                if (P1SensorSet[8] && P1Sensors[8].state > 0) {
+                  value = -(P1Sensors[8].state / P1Sensors[5].state);
+                }
+              }
+            }
+          }
           return float_to_modbus(value, reg);
           break;
         case 14:
@@ -161,6 +181,13 @@ namespace smartevse_sensorbox {
     void SmartEVSESensorbox::loop() {
         if (available()) {
           this->ct_read_values();
+        }
+
+        if (!NoP1Data && (now - P1LastUpdate) < 6) {
+            digitalWrite(PIN_LED_RED, HIGH);
+        } else if(!NoP1Data) {
+            digitalWrite(PIN_LED_RED, LOW);
+            NoP1Data = 1;
         }
     }
 
@@ -294,19 +321,12 @@ namespace smartevse_sensorbox {
     }
 
     bool SmartEVSESensorbox::is_p1_ready() {
-        uint16_t now = time(NULL);
-        if ((now - P1LastUpdate) < 10) {
-            digitalWrite(PIN_LED_RED, HIGH);
-            return true;
-        } else {
-            digitalWrite(PIN_LED_RED, LOW);
-            return false;
-        }
+        return NoP1Data == 1;
     }
 
     bool SmartEVSESensorbox::is_ct_ready() {
       uint16_t now = time(NULL);
-      return (now - CTLastUpdate) < 10;
+      return (now - CTLastUpdate) < 6;
     }
 
     // Poly used is x^16+x^15+x^2+x
