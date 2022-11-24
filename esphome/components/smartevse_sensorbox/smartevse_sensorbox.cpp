@@ -179,7 +179,7 @@ namespace smartevse_sensorbox {
 
         // set-up CT measurement task separately (as ESPHome runs in a single task)
         xTaskCreate(
-            SmartEVSESensorbox::ct_read_values, // Function that should be called
+            ct_read_values, // Function that should be called
             "CTReadValues",      // Name of the task (for debugging)
             4096,           // Stack size (bytes)
             NULL,           // Parameter to pass
