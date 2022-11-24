@@ -183,7 +183,7 @@ namespace smartevse_sensorbox {
           this->ct_read_values();
         }
 
-        if (!NoP1Data && (now - P1LastUpdate) < 6) {
+        if (!NoP1Data && (time(NULL) - P1LastUpdate) < 6) {
             digitalWrite(PIN_LED_RED, HIGH);
         } else if(!NoP1Data) {
             digitalWrite(PIN_LED_RED, LOW);
