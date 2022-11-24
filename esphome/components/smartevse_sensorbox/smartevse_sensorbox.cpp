@@ -25,9 +25,9 @@ namespace smartevse_sensorbox {
         Wire = CTWire + CTRotation;
     }
 
-    void SmartEVSESensorbox::set_p1_version_sensor(esphome::text_sensor::TextSensor* &sensor) {
+    void SmartEVSESensorbox::set_p1_version_sensor(esphome::text_sensor::TextSensor* sensor) {
       DSMRVersionSensor = sensor;
-      sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
+      DSMRVersionSensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
         P1LastUpdate = time(NULL);
       });
     }
