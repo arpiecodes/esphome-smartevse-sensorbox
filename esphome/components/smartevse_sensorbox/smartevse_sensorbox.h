@@ -72,6 +72,7 @@ namespace esphome {
 
           bool P1SensorSet[10];
           esphome::sensor::Sensor* P1Sensors[10];
+          esphome::sensor::TextSensor* DSMRVersionSensor;
 
           esphome::sensor::Sensor* ct1_current_ = new esphome::sensor::Sensor();
           esphome::sensor::Sensor* ct2_current_ = new esphome::sensor::Sensor();

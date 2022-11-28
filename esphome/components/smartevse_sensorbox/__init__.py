@@ -90,7 +90,8 @@ async def to_code(config):
     if CONF_P1_SENSORS in config:
         conf_p1_sensors = config.get(CONF_P1_SENSORS)
 
-        cg.add(sensorbox.add_p1_value_sensor(0, await cg.get_variable(conf_p1_sensors[CONF_P1_SENSOR_DSMR_VERSION])))
+        cg.add(sensorbox.set_p1_version_sensor(await cg.get_variable(conf_p1_sensors[CONF_P1_SENSOR_DSMR_VERSION])))
+
         cg.add(sensorbox.add_p1_value_sensor(1, await cg.get_variable(conf_p1_sensors[CONF_P1_SENSOR_POWER_CONSUMED_PHASE_1])))
         cg.add(sensorbox.add_p1_value_sensor(2, await cg.get_variable(conf_p1_sensors[CONF_P1_SENSOR_POWER_CONSUMED_PHASE_2])))
         cg.add(sensorbox.add_p1_value_sensor(3, await cg.get_variable(conf_p1_sensors[CONF_P1_SENSOR_POWER_CONSUMED_PHASE_3])))

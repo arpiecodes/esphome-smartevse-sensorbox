@@ -26,11 +26,10 @@ namespace smartevse_sensorbox {
     }
 
     void SmartEVSESensorbox::set_p1_version_sensor(esphome::text_sensor::TextSensor* &sensor) {
-      P1Sensors[0] = sensor;
-      P1Sensors[0]->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
+      DSMRVersionSensor = sensor;
+      sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
         P1LastUpdate = time(NULL);
       });
-      P1SensorSet[0] = true;
     }
 
     uint16_t SmartEVSESensorbox::modbus_input_on_read(uint16_t reg, uint16_t val) {
@@ -40,7 +39,7 @@ namespace smartevse_sensorbox {
       float value = 0;
       float produceValue;
 
-      ESP_LOGD("modbus", "register %i read request from master\n", reg);
+      ESP_LOGD("modbus", "register %i read request from master", reg);
 
       switch (reg) {
         case 0:
@@ -53,8 +52,8 @@ namespace smartevse_sensorbox {
           if (UseCTs && is_ct_ready()) {
             dataready |= 0x03;
           }
-          if (P1SensorSet[0] && is_p1_ready()) {
-            DSMRver = P1Sensors[0]->state;
+          if (is_p1_ready()) {
+            DSMRver = atoi(DSMRVersionSensor->state.c_str());
             if (DSMRver == 50) {
               dataready |= 0x80;
             } else {
@@ -328,7 +327,7 @@ namespace smartevse_sensorbox {
 
     uint16_t SmartEVSESensorbox::float_to_modbus(float val, uint16_t reg) {
         char *pBytes = (char*)&val;
-        ESP_LOGD("modbus", "register %i read response value %.2f \n", reg, val);
+        ESP_LOGD("modbus", "register %i read response value %.2f", reg, val);
         if (reg % 2 == 0) {
             return (uint16_t) (pBytes[3]<<8)+pBytes[2];
         } else {
