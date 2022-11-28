@@ -91,10 +91,10 @@ namespace smartevse_sensorbox {
           // Current L1 (32 bit floating point), Smartmeter P1 data
           if (P1SensorSet[1] && P1SensorSet[4]) {
             if (P1Sensors[4]->state > 200) {
-              value = P1Sensors[1]->state / P1Sensors[4]->state;
+              value = P1Sensors[1]->state * 1000 / P1Sensors[4]->state;
               if (P1SensorSet[7]) {
                 if (P1Sensors[7]->state > 0) {
-                  value = -(P1Sensors[7]->state / P1Sensors[4]->state);
+                  value = -(P1Sensors[7]->state * 1000 / P1Sensors[4]->state);
                 }
               }
             }
@@ -106,10 +106,10 @@ namespace smartevse_sensorbox {
           // Current L2 (32 bit floating point), Smartmeter P1 data
           if (P1SensorSet[2] && P1SensorSet[5]) {
             if (P1Sensors[5]->state > 200) {
-              value = P1Sensors[2]->state / P1Sensors[5]->state;
+              value = P1Sensors[2]->state * 1000 / P1Sensors[5]->state;
               if (P1SensorSet[8]) {
                 if (P1Sensors[8]->state > 0) {
-                  value = -(P1Sensors[8]->state / P1Sensors[5]->state);
+                  value = -(P1Sensors[8]->state * 1000 / P1Sensors[5]->state);
                 }
               }
             }
@@ -121,10 +121,10 @@ namespace smartevse_sensorbox {
           // Current L3 (32 bit floating point), Smartmeter P1 data
           if (P1SensorSet[3] && P1SensorSet[6]) {
             if (P1Sensors[6]->state > 200) {
-              value = P1Sensors[3]->state / P1Sensors[6]->state;
+              value = P1Sensors[3]->state * 1000 / P1Sensors[6]->state;
               if (P1SensorSet[9]) {
                 if (P1Sensors[9]->state > 0) {
-                  value = -(P1Sensors[9]->state / P1Sensors[6]->state);
+                  value = -(P1Sensors[9]->state * 1000 / P1Sensors[6]->state);
                 }
               }
             }
