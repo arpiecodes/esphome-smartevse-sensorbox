@@ -26,10 +26,11 @@ namespace smartevse_sensorbox {
     }
 
     void SmartEVSESensorbox::set_p1_version_sensor(esphome::text_sensor::TextSensor* &sensor) {
-      DSMRVersionSensor = sensor;
-      sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
+      P1Sensors[0] = sensor;
+      P1Sensors[0]->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
         P1LastUpdate = time(NULL);
       });
+      P1SensorSet[0] = true;
     }
 
     uint16_t SmartEVSESensorbox::modbus_input_on_read(uint16_t reg, uint16_t val) {
@@ -49,11 +50,11 @@ namespace smartevse_sensorbox {
         case 1:
           // DSMR Version(MSB), CT's or P1(LSB)
           // 0x3283 = DSMR version 50, P1 port connected (0x80) CT's Used (0x03)
-          if (is_ct_ready() && UseCTs) {
+          if (UseCTs && is_ct_ready()) {
             dataready |= 0x03;
           }
-          if (is_p1_ready()) {
-            DSMRver = atoi(DSMRVersionSensor->state.c_str());
+          if (P1SensorSet[0] && is_p1_ready()) {
+            DSMRver = P1Sensors[0]->state;
             if (DSMRver == 50) {
               dataready |= 0x80;
             } else {
@@ -65,36 +66,36 @@ namespace smartevse_sensorbox {
         case 2:
         case 3:
           // Volts L1 (32 bit floating point), Smartmeter P1 data
-          if (P1SensorSet[3]) {
-            value = P1Sensors[3]->state;
+          if (P1SensorSet[4]) {
+            value = P1Sensors[4]->state;
           }
           return float_to_modbus(value, reg);
           break;
         case 4:
         case 5:
           // Volts L2 (32 bit floating point), Smartmeter P1 data
-          if (P1SensorSet[4]) {
-            value = P1Sensors[4]->state;
+          if (P1SensorSet[5]) {
+            value = P1Sensors[5]->state;
           }
           return float_to_modbus(value, reg);
           break;
         case 6:
         case 7:
           // Volts L3 (32 bit floating point), Smartmeter P1 data
-          if (P1SensorSet[5]) {
-            value = P1Sensors[5]->state;
+          if (P1SensorSet[6]) {
+            value = P1Sensors[6]->state;
           }
           return float_to_modbus(value, reg);
           break;
         case 8:
         case 9:
           // Current L1 (32 bit floating point), Smartmeter P1 data
-          if (P1SensorSet[0] && P1SensorSet[3]) {
-            if (P1Sensors[3]->state > 0) {
-              value = P1Sensors[0]->state / P1Sensors[3]->state;
-              if (value == 0 && P1SensorSet[6]) {
-                if (P1Sensors[6]->state > 0) {
-                  value = -(P1Sensors[6]->state / P1Sensors[3]->state);
+          if (P1SensorSet[1] && P1SensorSet[4]) {
+            if (P1Sensors[4]->state > 200) {
+              value = P1Sensors[1]->state / P1Sensors[4]->state;
+              if (P1SensorSet[7]) {
+                if (P1Sensors[7]->state > 0) {
+                  value = -(P1Sensors[7]->state / P1Sensors[4]->state);
                 }
               }
             }
@@ -104,12 +105,12 @@ namespace smartevse_sensorbox {
         case 10:
         case 11:
           // Current L2 (32 bit floating point), Smartmeter P1 data
-          if (P1SensorSet[1] && P1SensorSet[4]) {
-            if (P1Sensors[4]->state > 0) {
-              value = P1Sensors[1]->state / P1Sensors[4]->state;
-              if (value == 0 && P1SensorSet[7]) {
-                if (P1Sensors[7]->state > 0) {
-                  value = -(P1Sensors[7]->state / P1Sensors[4]->state);
+          if (P1SensorSet[2] && P1SensorSet[5]) {
+            if (P1Sensors[5]->state > 200) {
+              value = P1Sensors[2]->state / P1Sensors[5]->state;
+              if (P1SensorSet[8]) {
+                if (P1Sensors[8]->state > 0) {
+                  value = -(P1Sensors[8]->state / P1Sensors[5]->state);
                 }
               }
             }
@@ -119,12 +120,12 @@ namespace smartevse_sensorbox {
         case 12:
         case 13:
           // Current L3 (32 bit floating point), Smartmeter P1 data
-          if (P1SensorSet[2] && P1SensorSet[5]) {
-            if (P1Sensors[5]->state > 0) {
-              value = P1Sensors[2]->state / P1Sensors[5]->state;
-              if (value == 0 && P1SensorSet[8]) {
-                if (P1Sensors[8]->state > 0) {
-                  value = -(P1Sensors[8]->state / P1Sensors[5]->state);
+          if (P1SensorSet[3] && P1SensorSet[6]) {
+            if (P1Sensors[6]->state > 200) {
+              value = P1Sensors[3]->state / P1Sensors[6]->state;
+              if (P1SensorSet[9]) {
+                if (P1Sensors[9]->state > 0) {
+                  value = -(P1Sensors[9]->state / P1Sensors[6]->state);
                 }
               }
             }
