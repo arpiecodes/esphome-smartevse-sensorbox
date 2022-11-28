@@ -39,6 +39,8 @@ namespace smartevse_sensorbox {
       float value = 0;
       float produceValue;
 
+      ESP_LOGD("modbus", "register %i read request from master\n", reg);
+
       switch (reg) {
         case 0:
           // Sensorbox version 1 (the one without extra fields), Wire setting
@@ -325,6 +327,7 @@ namespace smartevse_sensorbox {
 
     uint16_t SmartEVSESensorbox::float_to_modbus(float val, uint16_t reg) {
         char *pBytes = (char*)&val;
+        ESP_LOGD("modbus", "register %i read response value %.2f \n", reg, val);
         if (reg % 2 == 0) {
             return (uint16_t) (pBytes[3]<<8)+pBytes[2];
         } else {
