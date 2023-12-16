@@ -21,6 +21,10 @@ esphome:
   platformio_options:
     board_build.f_cpu: 240000000L
 
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
 external_components:
   - source: github://arpiecodes/esphome-modbus-server@master
     refresh: 60s
@@ -56,7 +60,6 @@ wifi:
   ap:
     ssid: SmartEVSE Sensorbox
     password: !secret wifi_fallback_password
-
 
 captive_portal:
 
@@ -104,18 +107,23 @@ smartevse_sensorbox:
   p1_sensors: # optional if use_ct_readings is true
     # IDs of sensors to use for P1 measurements (see dsmr section below) 
     dsmr_version: dsmr_version
-    current_phase_1: current_phase_1
-    current_phase_2: current_phase_2
-    current_phase_3: current_phase_3
+    power_consumed_phase_1: power_consumed_phase_1
+    power_consumed_phase_2: power_consumed_phase_2
+    power_consumed_phase_3: power_consumed_phase_3
     voltage_phase_1: voltage_phase_1
     voltage_phase_2: voltage_phase_2
-    voltage_phase_3: voltage_phase_2
+    voltage_phase_3: voltage_phase_3
+    power_produced_phase_1: power_produced_phase_1
+    power_produced_phase_2: power_produced_phase_2
+    power_produced_phase_3: power_produced_phase_3
 
 # DSMR component config
 # see https://esphome.io/components/sensor/dsmr.html
 dsmr:
   uart_id: uart_p1
   max_telegram_length: 1700
+  request_interval: 2s
+  receive_timeout: 300ms
 
 sensor:
   - platform: dsmr
@@ -165,21 +173,27 @@ sensor:
       id: current_phase_3
       name: "Current Phase 3"
     power_delivered_l1:
+      id: power_consumed_phase_1
       name: "Power Consumed Phase 1"
       accuracy_decimals: 3
     power_delivered_l2:
+      id: power_consumed_phase_2
       name: "Power Consumed Phase 2"
       accuracy_decimals: 3
     power_delivered_l3:
+      id: power_consumed_phase_3
       name: "Power Consumed Phase 3"
       accuracy_decimals: 3
     power_returned_l1:
+      id: power_produced_phase_1
       name: "Power Produced Phase 1"
       accuracy_decimals: 3
     power_returned_l2:
       name: "Power Produced Phase 2"
+      id: power_produced_phase_2
       accuracy_decimals: 3
     power_returned_l3:
+      id: power_produced_phase_3
       name: "Power Produced Phase 3"
       accuracy_decimals: 3
     gas_delivered:
@@ -187,10 +201,11 @@ sensor:
       state_class: total_increasing
   - platform: uptime
     name: "Sensorbox Uptime"
+    update_interval: 30s
   - platform: wifi_signal
     name: "Sensorbox Wi-Fi Signal"
     update_interval: 60s
-  - platform: custom # adds in CT clamp readings as sensors as well
+  - platform: custom
     lambda: |-
       return { id(sensorbox)->ct1_current_, id(sensorbox)->ct2_current_, id(sensorbox)->ct3_current_};
     # Sensor names for PIC connected current clamps in HA, you can change these if you want
