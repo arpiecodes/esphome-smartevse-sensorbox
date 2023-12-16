@@ -22,11 +22,11 @@ esphome:
     board_build.f_cpu: 240000000L
 
 external_components:
-  - source: github://synegic/esphome-modbus-server@master
+  - source: github://arpiecodes/esphome-modbus-server@master
     refresh: 60s
     components:
       - modbus_server
-  - source: github://synegic/esphome-smartevse-sensorbox@main
+  - source: github://arpiecodes/esphome-smartevse-sensorbox@main
     refresh: 60s
     components:
       - smartevse_sensorbox

@@ -29,6 +29,7 @@ namespace smartevse_sensorbox {
       DSMRVersionSensor = sensor;
       sensor->add_on_state_callback([this](std::__cxx11::basic_string<char> val) {
         P1LastUpdate = time(NULL);
+        GreenLEDBlink = 0;
       });
     }
 
@@ -189,6 +190,7 @@ namespace smartevse_sensorbox {
         }
 
         ct_read_values();
+        this->ct_read_values();
     }
 
     void SmartEVSESensorbox::ct_read_values() {
