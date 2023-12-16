@@ -47,6 +47,8 @@ logger:
 
 # Enable Home Assistant API
 api:
+  # Don't reboot if the HomeAssistant connection times out (we can do just fine without it)
+  reboot_timeout: 0s
 
 ota:
   password: "YOURPASSWORDHERE"
