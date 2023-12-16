@@ -66,19 +66,18 @@ namespace esphome {
           void setup() override;
           void loop() override;
 
+          esphome::sensor::Sensor* ct1_current_ = new esphome::sensor::Sensor();
+          esphome::sensor::Sensor* ct2_current_ = new esphome::sensor::Sensor();
+          esphome::sensor::Sensor* ct3_current_ = new esphome::sensor::Sensor();
+
          private:
-          unsigned char IrmsMode = 0, UseCTs = 0, Wire = 0, CTWire = 0, CTRotation = 0;
+          unsigned char IrmsMode = 0, UseCTs = 0, Wire = 0, CTWire = 0, CTRotation = 0, NoP1Data = 0;
           float IrmsCT[3];
 
           bool P1SensorSet[10];
           esphome::sensor::Sensor* P1Sensors[10];
           esphome::text_sensor::TextSensor* DSMRVersionSensor;
 
-          esphome::sensor::Sensor* ct1_current_ = new esphome::sensor::Sensor();
-          esphome::sensor::Sensor* ct2_current_ = new esphome::sensor::Sensor();
-          esphome::sensor::Sensor* ct3_current_ = new esphome::sensor::Sensor();
-
-          uint8_t GreenLEDBlink = 0;
           uint16_t P1LastUpdate = 0;
           uint16_t CTLastUpdate = 0;
 
